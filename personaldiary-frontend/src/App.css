@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+
+  text-align: center;
+}
+
+.head {
+  position: relative;
+  border: 0 20 0 20;
+  height: 40px;
+  width: 100%;
+  background-color: #888;
+}
+
+.textarea {
+  width: 53ch;
+  height: calc(25 * 1.7rem);
+  overflow: scroll;
+  white-space: pre-wrap;
+  background-color: beige;
+}
