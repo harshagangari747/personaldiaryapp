@@ -4,7 +4,6 @@ import Body from "./Body";
 import Foot from "./Foot";
 import Image from "./Image";
 import NavButton from "./NavButton";
-import sampledata from "./JSON/sampledata.json";
 import { PageContext } from "./store/PageContext.jsx";
 import { useEffect, useState } from "react";
 
@@ -12,32 +11,63 @@ function App() {
   const [isLoading, setLoading] = useState(true);
   const [pageData, setPageData] = useState({});
   const [isWriting, setIsWriting] = useState(false);
+  const [pageDate, setPageDate] = useState();
 
-  async function getPage() {
-    fetch("http://127.0.0.1:5000", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      mode: "cors",
-    })
-      .then((response) => {
-        console.log("response", response);
-        if (!response.ok) {
-          throw new Error("somethings wrong");
-        }
-        const responseData = response.json();
-        setPageData(respData);
+  async function getPage(date) {
+    try {
+      console.log("got date", date);
+      const url = date
+        ? "http://localhost:5000/page?date="
+        : "http://localhost:5000/";
+
+      const response = await fetch(url + (date ? date : ""), {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        mode: "cors",
+      });
+
+      if (!response.ok) {
+        throw new Error("something is wrong");
+      }
+
+      let responseData = await response.json();
+
+      setPageData(() => {
+        setPageDate(responseData.title.date);
         setLoading(false);
-
         return responseData;
-      })
-      .catch((err) => setLoading(true));
+      });
+    } catch (err) {
+      console.log("err", err);
+      setLoading(true);
+    }
   }
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    getPage(pageDate);
+  }, [pageDate]);
 
-  // Toggle between read and write mode
+  async function handlePostPage() {
+    try {
+      const response = fetch("http://localhost:5000/post", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        mode: "cors",
+        body: JSON.stringify(pageData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Can't post the page...");
+      }
+    } catch (err) {
+      console.log("error", err);
+    }
+  }
+
   function handleReadWriteButton() {
     setIsWriting((prevIsWriting) => {
       const newIsWriting = !prevIsWriting;
@@ -50,17 +80,21 @@ function App() {
     });
   }
 
-  // Turn the page left
-  function handleLeftPageTurn() {
-    setPageData(sampledata[0]);
+  function handlePageTurn(isLeft) {
+    let partialDate = pageDate.split("/");
+    console.log("partial date", partialDate);
+
+    setPageDate(() => {
+      const currDate = new Date(pageDate);
+
+      const nextDate = isLeft
+        ? currDate.setDate(currDate.getDate() - 1)
+        : currDate.setDate(currDate.getDate() + 1);
+
+      return new Date(nextDate).toLocaleDateString();
+    });
   }
 
-  // Turn the page right
-  function handleRightPageTurn() {
-    setPageData(sampledata[1]);
-  }
-
-  // If the app is still loading, display loading text
   if (isLoading) {
     return "Loading...";
   }
@@ -69,16 +103,13 @@ function App() {
     <div className="flex flex-row gap-10">
       <PageContext.Provider value={{ pageData }}>
         <div className="w-[40vw] flex-col-1">
-          <div>
-            <button onClick={handleReadWriteButton}>
-              {isWriting ? "Read" : "Write"}
-            </button>
-          </div>
           <Image />
           <NavButton
             class="bg-indigo-400 absolute top-180 left-60"
             display="<|"
-            onClick={handleLeftPageTurn}
+            onClick={() => {
+              handlePageTurn(true);
+            }}
           />
         </div>
         <div className="w-[56vw] mx-0 flex-col-2">
@@ -87,11 +118,20 @@ function App() {
           <Foot />
         </div>
         <div className="w-[40vw] flex-col-3">
+          <div className="flex flex-row">
+            <button onClick={handleReadWriteButton}>
+              {isWriting ? "Read" : "Write"}
+            </button>
+
+            {isWriting && <button onClick={handlePostPage}>Post</button>}
+          </div>
           <Image />
           <NavButton
             class="to-indigo-100 absolute top-180 right-60"
             display="|>"
-            onClick={handleRightPageTurn}
+            onClick={() => {
+              handlePageTurn(false);
+            }}
           />
         </div>
       </PageContext.Provider>
