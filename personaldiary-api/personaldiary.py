@@ -18,18 +18,20 @@ pageCollection = db['pages']
 @app.route('/',methods=['GET'])
 def getLastWrittenPage():
     try:
-        row = pageCollection.find()
+        row = pageCollection.find().sort({'_id':-1}).limit(1)
         
         result = list(row)
 
         if result:
             result = result[0]
             result['_id'] = str(result['_id'])
-        print('res',result)
+            print('res',result)
 
-        return jsonify(result)
+            return jsonify(result)
+        else:
+            return jsonify({})
     except:
-        return jsonify(HTTPResponse(400))
+        return HTTPResponse(400)
     
 
 

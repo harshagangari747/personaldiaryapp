@@ -3,8 +3,9 @@
 #root {
   max-width: 1280px;
   margin: 0 auto;
-
+  background-color: white;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .head {
@@ -16,9 +17,9 @@
 }
 
 .textarea {
-  width: 53ch;
+  width: 100%;
+  display: inline-block;
   height: calc(25 * 1.7rem);
   overflow: scroll;
   white-space: pre-wrap;
-  background-color: beige;
 }
