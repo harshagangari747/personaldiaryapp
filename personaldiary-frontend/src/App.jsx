@@ -6,6 +6,7 @@ import Image from "./Image";
 import NavButton from "./NavButton";
 import { PageContext } from "./store/PageContext.jsx";
 import { useEffect, useRef, useState } from "react";
+import FileUpload from "./FileUpload.jsx";
 
 function App() {
   const [isLoading, setLoading] = useState(true);
@@ -16,14 +17,14 @@ function App() {
   const titleRef = useRef("");
   const dateRef = useRef(null);
   const notesRef = useRef("");
-  const imagesRef = useRef([]);
+  const imagesRef = useRef([1, 4, 42, 5]);
   const quoteRef = useRef("");
 
   // get details of a page :
   // optional: date
   async function getPage(date) {
     try {
-      let url = "http://127.0.0.1:5000/";
+      let url = "http://127.0.0.1:5000";
       if (date === undefined) {
         date = new Date().toLocaleDateString();
       }
@@ -87,13 +88,14 @@ function App() {
       },
       notes: notesRef.current.innerText,
       quote: quoteRef.current.value,
+      images: imagesRef.current.values,
     };
     console.log("post date", dateRef.current.value);
-    console.log("post date locale", obj.date);
+    console.log("post date locale", imagesRef.current.values);
     console.log("post object", obj);
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/post", {
+      const response = await fetch("http://127.0.0.1:5000/page", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -192,7 +194,7 @@ function App() {
             )}
           </div>
           <Image />
-          {!isWriting && (
+          {!isWriting ? (
             <NavButton
               class="to-indigo-100 absolute top-180 right-60"
               display="|>"
@@ -200,6 +202,8 @@ function App() {
                 handlePageTurn(false);
               }}
             />
+          ) : (
+            <FileUpload imagesRef={imagesRef} height="50px" width="50px" />
           )}
         </div>
       </PageContext.Provider>
