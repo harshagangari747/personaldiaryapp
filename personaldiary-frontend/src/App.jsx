@@ -1,12 +1,13 @@
 import "./App.css";
-import Head from "./Head";
-import Body from "./Body";
-import Foot from "./Foot";
-import Image from "./Image";
-import NavButton from "./NavButton";
+import Head from "./components/Head.jsx";
+import Body from "./components/Body.jsx";
+import Foot from "./components/Foot.jsx";
+import Image from "./components/Image.jsx";
+import NavButton from "./components/NavButton.jsx";
 import { PageContext } from "./store/PageContext.jsx";
 import { useEffect, useRef, useState } from "react";
-import FileUpload from "./FileUpload.jsx";
+import FileUpload from "./components/FileUpload.jsx";
+import decodeBase64 from "./Utilities/ImageDecode.js";
 
 function App() {
   const [isLoading, setLoading] = useState(true);
@@ -17,7 +18,7 @@ function App() {
   const titleRef = useRef("");
   const dateRef = useRef(null);
   const notesRef = useRef("");
-  const imagesRef = useRef([1, 4, 42, 5]);
+  const imagesRef = useRef([]);
   const quoteRef = useRef("");
 
   // get details of a page :
@@ -81,6 +82,11 @@ function App() {
 
   // write the details of a page
   async function handlePostPage() {
+    const formData = new FormData();
+    // const reader = new FileReader();
+    // const imageBase64 = imagesRef.current.map((ref) =>
+    //   reader.readAsDataURL(ref.current.files[0])
+    // );
     const obj = {
       title: {
         text: titleRef.current.value,
@@ -88,28 +94,27 @@ function App() {
       },
       notes: notesRef.current.innerText,
       quote: quoteRef.current.value,
-      images: imagesRef.current.values,
     };
-    console.log("post date", dateRef.current.value);
-    console.log("post date locale", imagesRef.current.values);
-    console.log("post object", obj);
+    const images = imagesRef.current.map((img) => img.current.files[0]);
+    formData.append("text", JSON.stringify(obj));
+    images.forEach((img) => formData.append("images", img));
+
+    console.log("formdata img", formData.get("images"));
+    console.log("form data obj", formData.get("text"));
 
     try {
       const response = await fetch("http://127.0.0.1:5000/page", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: {},
         mode: "cors",
-        body: JSON.stringify(obj),
+        body: formData,
       });
 
       if (!response.ok) {
         throw new Error("Can't post the page...");
       } else {
         const result = await response.json();
-        result["images"] = [];
-        console.log("res", result);
+        result["images"] = await decodeBase64(result["images"]);
         setPageData(() => {
           setIsWriting(false);
           return result;
@@ -149,7 +154,7 @@ function App() {
       const nextDate = isLeft
         ? currDate.setDate(currDate.getDate() - 1)
         : currDate.setDate(currDate.getDate() + 1);
-      console.log(new Date(nextDate).toLocaleDateString());
+      console.log("new date", new Date(nextDate).toLocaleDateString());
 
       return new Date(nextDate).toLocaleDateString();
     });

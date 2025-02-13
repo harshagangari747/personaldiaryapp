@@ -1,0 +1,5 @@
+.env
+/personaldiary-api/.env
+./personaldiary-api/.env
+./personaldiary-api/.flaskenv
+

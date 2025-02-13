@@ -2,3 +2,7 @@ flask
 flask-smorest
 pymongo
 bson
+flask_cors
+boto3
+python-dotenv
+pathlib
