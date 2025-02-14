@@ -6,8 +6,8 @@ export default function Image({ even }) {
   const images = PgCtxt.pageData.images;
   let randomNum = Math.floor(Math.random() * 100);
   let rotate = "rotate-" + randomNum;
-  console.log(images, "images jsx");
-  console.log("randomNum", randomNum);
+  //console.log(images, "images jsx");
+  //console.log("randomNum", randomNum);
   return (
     <div>
       {images &&

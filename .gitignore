@@ -2,4 +2,6 @@
 /personaldiary-api/.env
 ./personaldiary-api/.env
 ./personaldiary-api/.flaskenv
-
+./personaldiary-api/Images/
+Images
+./personaldiary-api/Images

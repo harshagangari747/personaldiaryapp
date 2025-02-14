@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime
 import base64
+from resources.awsS3Service import S3FileUploadService
 
 class ImageHandler:
     def __init__(self):
@@ -18,21 +19,22 @@ class ImageHandler:
 
 
     def saveImage(self,file,date):
-        # print('file:',file,'date:',date,'filename',file.filename)
-        print('Saving Images...')
-        formattedDate = self._dateFormatter(date)
-        print('formmateddate',formattedDate)
-        folderPath = Path(self.imagesdir,formattedDate)
-  
-        print('folder path',folderPath)
-
-        os.makedirs(folderPath,exist_ok=True)
-
-        fileName = Path(folderPath,file.filename)
-        print('filename',fileName)
         try:
+            print('Saving Images...')
+            awsS3Service = S3FileUploadService()
+            awsS3Service.uploadImages(file)
+            formattedDate = self._dateFormatter(date)
+
+            folderPath = Path(self.imagesdir,formattedDate)
+
+        
+            os.makedirs(folderPath,exist_ok=True)
+
+            fileName = Path(folderPath,file.filename)
+
+
             file.save(fileName)
-            print('saved file',fileName)
+            
             return fileName
         except Exception as err:
             print("Can't save file ", fileName, "More exception details: ",err) 

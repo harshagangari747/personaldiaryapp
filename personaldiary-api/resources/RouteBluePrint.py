@@ -44,11 +44,15 @@ class RouteBluePrint(MethodView):
             files = request.files.getlist('images')
            
             textData = json.loads(data.get('text'))
+            pageExists = self._isPageWithDateExists(textData['title']['date'])
+            if pageExists:
+                return {"message":"Page on this date already exists."},202
+            
+            if files:
+                for file in files:
+                    self.imageHandler.saveImage(file,textData['title']['date'])
 
-            for file in files:
-                self.imageHandler.saveImage(file,textData['title']['date'])
-
-            textData['images'] = [file.filename for file in files]
+            textData['images'] = [file.filename if file else None for file in files] 
             
             print('textdate after images',textData)
 
@@ -61,7 +65,7 @@ class RouteBluePrint(MethodView):
                 result["_id"] = str(result["_id"])
 
             result['images'] = self.imageHandler.getAllImages(result['title']['date'])
-
+            print('result after image fetch',result)
        
             return jsonify(result),200
         
@@ -69,5 +73,19 @@ class RouteBluePrint(MethodView):
         except Exception as e:
             print("error......", e)
             return abort(500,message="Something went wrong with the server")
+    
+    def _isPageWithDateExists(self, date):
+        try:
+            page = pageCollection.find({"title.date":{"$eq":date}})
+            
+            page = list(page)
+            print('page',page)
+            if page:
+                return True
+            print('return False')
+            return False
+        except Exception as ex:
+            print('Something went wrong while fetch the page at date',date)
+
         
 

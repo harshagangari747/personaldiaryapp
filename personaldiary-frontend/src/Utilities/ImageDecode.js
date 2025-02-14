@@ -1,10 +1,10 @@
 async function decodeBase64(list) {
   var images = [];
-  if (list.length === 0) {
+  console.log(list);
+  if (list === undefined) {
     return [];
   }
 
-  console.log("atob");
   for (var item of list) {
     const byteCharacters = atob(item);
     const byteArrays = [];

@@ -21,6 +21,8 @@ function App() {
   const imagesRef = useRef([]);
   const quoteRef = useRef("");
 
+  let errorMessage = "";
+
   // get details of a page :
   // optional: date
   async function getPage(date) {
@@ -30,7 +32,7 @@ function App() {
         date = new Date().toLocaleDateString();
       }
       url = url + "/page?date=" + date;
-      console.log(url);
+      //console.log(url);
 
       const response = await fetch(url, {
         method: "GET",
@@ -45,7 +47,7 @@ function App() {
       }
 
       let responseData = await response.json();
-      console.log("respon", responseData);
+      //console.log("respon", responseData);
 
       if (Object.keys(responseData).length !== 0) {
         const decodedImages = await decodeBase64(responseData["images"]);
@@ -69,10 +71,10 @@ function App() {
           return responseData;
         });
 
-        console.log("response", responseData);
+        //console.log("response", responseData);
       }
     } catch (err) {
-      console.log("err", err);
+      //console.log("err", err);
       setLoading(true);
     }
   }
@@ -85,14 +87,13 @@ function App() {
   // write the details of a page
   async function handlePostPage() {
     const formData = new FormData();
-    // const reader = new FileReader();
-    // const imageBase64 = imagesRef.current.map((ref) =>
-    //   reader.readAsDataURL(ref.current.files[0])
-    // );
+
     const obj = {
       title: {
         text: titleRef.current.value,
-        date: new Date(dateRef.current.value).toLocaleDateString(),
+        date: new Date(dateRef.current.value).toLocaleDateString("en-US", {
+          timeZone: "IST",
+        }),
       },
       notes: notesRef.current.innerText,
       quote: quoteRef.current.value,
@@ -101,8 +102,7 @@ function App() {
     formData.append("text", JSON.stringify(obj));
     images.forEach((img) => formData.append("images", img));
 
-    console.log("formdata img", formData.get("images"));
-    console.log("form data obj", formData.get("text"));
+    console.log(formData.get("text"));
 
     try {
       const response = await fetch("http://127.0.0.1:5000/page", {
@@ -111,18 +111,21 @@ function App() {
         mode: "cors",
         body: formData,
       });
-
+      let responseData = undefined;
       if (!response.ok) {
         throw new Error("Can't post the page...");
+      } else if (response.status == 202) {
+        responseData = await response.json();
       } else {
-        const result = await response.json();
-        result["images"] = await decodeBase64(result["images"]);
+        responseData = await response.json();
+        console.log("response", responseData);
+        responseData["images"] = await decodeBase64(responseData["images"]);
         setPageData(() => {
           setIsWriting(false);
-          return result;
+          return responseData;
         });
       }
-      console.log("response body", response.body);
+      console.log("response body", responseData.body);
     } catch (err) {
       console.log("error", err);
     }
@@ -132,7 +135,7 @@ function App() {
   function handleReadWriteButton() {
     setIsWriting((prevIsWriting) => {
       const newIsWriting = !prevIsWriting;
-      console.log("handle toggle", newIsWriting);
+      //console.log("handle toggle", newIsWriting);
 
       if (newIsWriting) {
         setPageData({ pageData: {}, isWriteMode: newIsWriting });
@@ -146,9 +149,9 @@ function App() {
 
   // Logic to turn a page left or right
   function handlePageTurn(isLeft) {
-    console.log("PageDate", pageDate);
+    //console.log("PageDate", pageDate);
     let partialDate = pageDate && pageDate.split("/");
-    console.log("partial date", partialDate, "page date", pageDate);
+    //console.log("partial date", partialDate, "page date", pageDate);
 
     setPageDate(() => {
       const currDate = new Date(pageDate);
@@ -156,7 +159,7 @@ function App() {
       const nextDate = isLeft
         ? currDate.setDate(currDate.getDate() - 1)
         : currDate.setDate(currDate.getDate() + 1);
-      console.log("new date", new Date(nextDate).toLocaleDateString());
+      //console.log("new date", new Date(nextDate).toLocaleDateString());
 
       return new Date(nextDate).toLocaleDateString();
     });
@@ -165,6 +168,13 @@ function App() {
   // Loading page while details are fetched
   if (isLoading) {
     return "Loading...";
+  }
+
+  function handleReadDateChange(date) {
+    setPageDate((d) => {
+      const newDate = new Date(date);
+      return newDate.toLocaleDateString();
+    });
   }
 
   // Return the component
@@ -184,7 +194,10 @@ function App() {
           )}
         </div>
         <div className="w-[56vw] mx-0 flex-col-2">
-          <Head head={{ titleRef, dateRef }} />
+          <Head
+            head={{ titleRef, dateRef }}
+            onDateChange={handleReadDateChange}
+          />
           <Body notes={notesRef} />
           <Foot foot={quoteRef} />
         </div>

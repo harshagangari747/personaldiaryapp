@@ -1,8 +1,6 @@
 import React from "react";
 
 export default function ImageUpload({ imgRef, id, onDelete }) {
-  console.log("imref", imgRef);
-
   function handleImageDelete() {
     console.log("handle delete:", id);
     return onDelete(id);
