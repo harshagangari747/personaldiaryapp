@@ -48,12 +48,14 @@ function App() {
       console.log("respon", responseData);
 
       if (Object.keys(responseData).length !== 0) {
+        const decodedImages = await decodeBase64(responseData["images"]);
         setPageData(() => {
           setPageDate(date);
           setLoading(false);
           responseData.title.date = new Date(
             responseData.title.date
           ).toLocaleDateString();
+          responseData["images"] = decodedImages;
           return responseData;
         });
       } else {
@@ -170,11 +172,11 @@ function App() {
     <div className="flex flex-row gap-10 mt-5">
       <PageContext.Provider value={{ pageData }}>
         <div className="w-[40vw] flex-col-1">
-          <Image />
+          <Image even={true} />
           {!isWriting && (
             <NavButton
-              class="bg-indigo-400 absolute top-180 left-60"
-              display="<|"
+              class="bg-red-600 absolute top-180 left-60"
+              display="<"
               onClick={() => {
                 handlePageTurn(true);
               }}
@@ -198,11 +200,11 @@ function App() {
               </button>
             )}
           </div>
-          <Image />
+          <Image even={false} />
           {!isWriting ? (
             <NavButton
-              class="to-indigo-100 absolute top-180 right-60"
-              display="|>"
+              class="absolute top-180 md:right-60 right-5 "
+              display=">"
               onClick={() => {
                 handlePageTurn(false);
               }}

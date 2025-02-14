@@ -16,33 +16,37 @@ pageCollection = db['pages']
 
 @blp.route("/page")
 class RouteBluePrint(MethodView):
+
+    def __init__(self):
+        self.imageHandler = ImageHandler()
+
     def get(self):
         date = request.args.get('date')
-        
+        print('get date',date)
         try:
             row = pageCollection.find({"title.date":{"$eq":date}})
             result = list(row)
+            print('result',result)
             if result:
                 result = result[0]
                 result['_id'] = str(result['_id'])
-            
+                result['images'] = self.imageHandler.getAllImages(result['title']['date'])
+            print('get result',result)
             return jsonify(result),200
-        except:
+        except Exception as ex:
+            print('ex',ex)
             abort(404,message="Something went wrong")
+            return {}
     
     def post(self):
         try:
             data = request.form
             files = request.files.getlist('images')
            
-        
             textData = json.loads(data.get('text'))
 
-          
-            imageHandler = ImageHandler()
-
             for file in files:
-                imageHandler.saveImage(file,textData['title']['date'])
+                self.imageHandler.saveImage(file,textData['title']['date'])
 
             textData['images'] = [file.filename for file in files]
             
@@ -56,7 +60,7 @@ class RouteBluePrint(MethodView):
             if result:
                 result["_id"] = str(result["_id"])
 
-            result['images'] = imageHandler.getAllImages(result['title']['date'])
+            result['images'] = self.imageHandler.getAllImages(result['title']['date'])
 
        
             return jsonify(result),200
