@@ -8,12 +8,14 @@ import { PageContext } from "./store/PageContext.jsx";
 import { useEffect, useRef, useState } from "react";
 import FileUpload from "./components/FileUpload.jsx";
 import decodeBase64 from "./Utilities/ImageDecode.js";
+import ErrorModal from "./components/ErrorModal.jsx";
 
 function App() {
   const [isLoading, setLoading] = useState(true);
   const [pageData, setPageData] = useState({});
   const [isWriting, setIsWriting] = useState(false);
   const [pageDate, setPageDate] = useState(undefined);
+  let [errorMessage, setErrorMessage] = useState(undefined);
 
   const titleRef = useRef("");
   const dateRef = useRef(null);
@@ -21,7 +23,7 @@ function App() {
   const imagesRef = useRef([]);
   const quoteRef = useRef("");
 
-  let errorMessage = "";
+  const errMsg = useRef();
 
   // get details of a page :
   // optional: date
@@ -116,13 +118,19 @@ function App() {
         throw new Error("Can't post the page...");
       } else if (response.status == 202) {
         responseData = await response.json();
+        setErrorMessage(() => {
+          return responseData.message;
+        });
       } else {
+        setErrorMessage(() => {
+          return undefined;
+        });
         responseData = await response.json();
         console.log("response", responseData);
         responseData["images"] = await decodeBase64(responseData["images"]);
         setPageData(() => {
           setIsWriting(false);
-          return responseData;
+          return obj;
         });
       }
       console.log("response body", responseData.body);
@@ -142,7 +150,6 @@ function App() {
       } else {
         setPageDate();
       }
-
       return newIsWriting;
     });
   }
@@ -150,7 +157,6 @@ function App() {
   // Logic to turn a page left or right
   function handlePageTurn(isLeft) {
     //console.log("PageDate", pageDate);
-    let partialDate = pageDate && pageDate.split("/");
     //console.log("partial date", partialDate, "page date", pageDate);
 
     setPageDate(() => {
@@ -179,55 +185,58 @@ function App() {
 
   // Return the component
   return (
-    <div className="flex flex-row gap-10 mt-5">
-      <PageContext.Provider value={{ pageData }}>
-        <div className="w-[40vw] flex-col-1">
-          <Image even={true} />
-          {!isWriting && (
-            <NavButton
-              class="bg-red-600 absolute top-180 left-60"
-              display="<"
-              onClick={() => {
-                handlePageTurn(true);
-              }}
-            />
-          )}
-        </div>
-        <div className="w-[56vw] mx-0 flex-col-2">
-          <Head
-            head={{ titleRef, dateRef }}
-            onDateChange={handleReadDateChange}
-          />
-          <Body notes={notesRef} />
-          <Foot foot={quoteRef} />
-        </div>
-        <div className="w-[40vw] flex-col-3">
-          <div className="flex flex-row my-2">
-            <button className="mx-2" onClick={handleReadWriteButton}>
-              {isWriting ? "Read" : "Write"}
-            </button>
-
-            {isWriting && (
-              <button className="mx-2" onClick={handlePostPage}>
-                Post
-              </button>
+    <>
+      {errorMessage && <ErrorModal ref={errMsg} error={errorMessage} />}
+      <div className="flex flex-row gap-10 mt-5">
+        <PageContext.Provider value={{ pageData }}>
+          <div className="w-[40vw] flex-col-1">
+            <Image even={true} />
+            {!isWriting && (
+              <NavButton
+                class=" absolute top-180 left-60"
+                display="<"
+                onClick={() => {
+                  handlePageTurn(true);
+                }}
+              />
             )}
           </div>
-          <Image even={false} />
-          {!isWriting ? (
-            <NavButton
-              class="absolute top-180 md:right-60 right-5 "
-              display=">"
-              onClick={() => {
-                handlePageTurn(false);
-              }}
+          <div className="w-[56vw] mx-0 flex-col-2">
+            <Head
+              head={{ titleRef, dateRef }}
+              onDateChange={handleReadDateChange}
             />
-          ) : (
-            <FileUpload imagesRef={imagesRef} height="50px" width="50px" />
-          )}
-        </div>
-      </PageContext.Provider>
-    </div>
+            <Body notes={notesRef} />
+            <Foot foot={quoteRef} />
+          </div>
+          <div className="w-[40vw] flex-col-3">
+            <div className="flex flex-row my-2">
+              <button className="mx-2" onClick={handleReadWriteButton}>
+                {isWriting ? "Read" : "Write"}
+              </button>
+
+              {isWriting && (
+                <button className="mx-2" onClick={handlePostPage}>
+                  Post
+                </button>
+              )}
+            </div>
+            <Image even={false} />
+            {!isWriting ? (
+              <NavButton
+                class="absolute top-180 md:right-60 right-5 "
+                display=">"
+                onClick={() => {
+                  handlePageTurn(false);
+                }}
+              />
+            ) : (
+              <FileUpload imagesRef={imagesRef} height="50px" width="50px" />
+            )}
+          </div>
+        </PageContext.Provider>
+      </div>
+    </>
   );
 }
 
